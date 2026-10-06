@@ -19,6 +19,8 @@ final class Tab: Identifiable {
     var pinnedHome: URL?
     /// nil = direct. Anything else routes this tab's traffic through a proxy / the Traffic Lab.
     var routeID: UUID?
+    /// Spy Mode: the page can't tell when this tab loses focus or is hidden (see spy.js). Per tab.
+    var isSpy = false
 
     // Live state.
     var isLoading = false
@@ -103,7 +105,7 @@ final class Tab: Identifiable {
             return
         }
         let config = popup ?? WebEngine.shared.makeConfiguration(dataStore: model.dataStore(for: self), portal: isPortal)
-        WebEngine.shared.install(on: config, handler: coordinator, portal: isPortal)
+        WebEngine.shared.install(on: config, handler: coordinator, portal: isPortal, spy: isSpy)
         let view = WebEngine.shared.makeWebView(configuration: config)
         view.tab = self
         view.navigationDelegate = coordinator
@@ -158,6 +160,20 @@ final class Tab: Identifiable {
         url = current
         routeID = new.isDirect ? nil : new.id
         if model?.selectedTab === self { wake() }
+        model?.sessionDirty()
+    }
+
+    /// Turns Spy Mode on or off. The script has to be in place before the page's own code runs, so the page reloads.
+    func setSpy(_ on: Bool) {
+        guard isSpy != on else { return }
+        isSpy = on
+        if let view = webView {
+            let current = view.url ?? url
+            sleep(force: true)
+            savedState = nil
+            url = current
+            if model?.selectedTab === self { wake() }
+        }
         model?.sessionDirty()
     }
 
@@ -384,6 +400,6 @@ final class Tab: Identifiable {
 
     func snapshot() -> TabSnapshot {
         TabSnapshot(id: id, url: (webView?.url ?? url)?.absoluteString, title: title, home: pinnedHome?.absoluteString,
-                    state: (webView?.interactionState as? Data) ?? savedState, route: routeID)
+                    state: (webView?.interactionState as? Data) ?? savedState, route: routeID, spy: isSpy ? true : nil)
     }
 }
