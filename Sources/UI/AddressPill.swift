@@ -60,6 +60,10 @@ struct AddressPill: View {
             .lineLimit(1)
         } else if let tab, let url = tab.url, let host = tab.host {
             HStack(spacing: 6) {
+                if tab.isSpy {
+                    Image(systemName: "eye.slash.fill").font(.caption.weight(.bold)).foregroundStyle(.purple)
+                        .help("Spy Mode is on for this tab")
+                }
                 if tab.route.kind != .direct {
                     Image(systemName: tab.route.symbol).font(.caption.weight(.bold))
                         .foregroundStyle(tab.route.kind == .inspect ? Color.orange : tab.route.needsTunnel ? Color.green : Color.blue)
@@ -167,6 +171,10 @@ struct PageMenu: View {
                 }
             }
             RouteMenu(model: model, tab: tab)
+            Toggle(isOn: Binding(get: { tab.isSpy }, set: { tab.setSpy($0) })) {
+                Label("Spy Mode", systemImage: "eye.slash")
+            }
+            .help("Sites can't see when you switch tabs, minimise or click away")
             Divider()
             Button("Zoom In", systemImage: "plus.magnifyingglass") { tab.zoomIn() }
             Button("Zoom Out", systemImage: "minus.magnifyingglass") { tab.zoomOut() }

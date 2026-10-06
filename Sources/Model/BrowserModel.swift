@@ -87,6 +87,7 @@ final class BrowserModel {
             tab.isPinned = pinned
             tab.pinnedHome = s.home.flatMap(URL.init(string:))
             tab.routeID = s.route
+            tab.isSpy = s.spy ?? false
             return tab
         }
         space.pinned = snap.pinned.map { make($0, pinned: true) }

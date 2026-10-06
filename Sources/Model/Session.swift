@@ -8,6 +8,7 @@ nonisolated struct TabSnapshot: Codable, Sendable {
     /// WebKit's opaque back/forward + scroll state, so a restored tab picks up exactly where it was.
     var state: Data?
     var route: UUID? = nil
+    var spy: Bool? = nil
 }
 
 nonisolated struct SpaceSnapshot: Codable, Sendable {

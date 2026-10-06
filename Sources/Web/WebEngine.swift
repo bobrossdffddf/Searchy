@@ -130,9 +130,13 @@ final class WebEngine {
     }
 
     /// Installs Searchy's scripts, rule lists and message handler on a configuration's content controller.
-    func install(on config: WKWebViewConfiguration, handler: WKScriptMessageHandler, portal: Bool = false) {
+    func install(on config: WKWebViewConfiguration, handler: WKScriptMessageHandler, portal: Bool = false, spy: Bool = false) {
         let controller = WKUserContentController()
         controller.addUserScript(makeBridgeScript())
+        // Spy Mode must live in the page's own world, so it runs before (and can override) the site's scripts.
+        if spy {
+            controller.addUserScript(WKUserScript(source: source("spy"), injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page))
+        }
         controller.add(WeakScriptHandler(handler), contentWorld: Self.world, name: "searchy")
         if !portal {
             for list in ContentBlocker.shared.activeLists { controller.add(list) }
